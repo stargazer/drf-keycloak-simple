@@ -40,10 +40,10 @@ def get_request_oidc_config(host: str) -> dict:
         return None
 
     if not isinstance(host, str):
-        raise OIDCConfigException(f"Cannot determine OIDC config. Missing 'host'")
+        raise OIDCConfigException("Cannot determine OIDC config. Missing 'host'")
 
     if not isinstance(api_settings.KEYCLOAK_MULTI_OIDC_JSON, dict):
-        raise OIDCConfigException(f"OIDC config KEYCLOAK_MULTI_OIDC_JSON not available")
+        raise OIDCConfigException("OIDC config KEYCLOAK_MULTI_OIDC_JSON not available")
 
     oidc_config = get_host_oidc(
         host,
@@ -58,16 +58,16 @@ def get_request_oidc_config(host: str) -> dict:
 
 
 def get_keycloak_openid(host: str = None) -> KeycloakOpenID:
-    """ 
+    """
         Create a KeycloakOpenID instance from application credentials.
-        :param host: If request host is provided will attempt to set application credentials 
+        :param host: If request host is provided will attempt to set application credentials
                         based on a predefined host list.
                             KEYCLOAK_MULTI_OIDC_JSON
 
                         otherwise it will fallback to the default configured application credentials
-                            KEYCLOAK_SERVER_URL, 
-                            KEYCLOAK_REALM, 
-                            KEYCLOAK_CLIENT_ID, 
+                            KEYCLOAK_SERVER_URL,
+                            KEYCLOAK_REALM,
+                            KEYCLOAK_CLIENT_ID,
                             KEYCLOAK_CLIENT_SECRET_KEY
 
         :returns: KeycloakOpenID

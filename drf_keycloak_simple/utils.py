@@ -1,16 +1,15 @@
-import jwt
 import logging
+import jwt
 from urllib.parse import urlparse
 from django.http.request import validate_host
 from rest_framework.exceptions import AuthenticationFailed
 from .settings import api_settings
-from . import __title__
 
-log = logging.getLogger(__title__)
+logger = logging.getLogger(__name__)
 
 
 def get_token_issuer(key: str):
-    """ 
+    """
     Decode an unverified token to get the issuer and validate it against ALLOWED_HOSTS
     :param key: token string
     :return: issuer
@@ -18,7 +17,7 @@ def get_token_issuer(key: str):
     """
     decoded = jwt.decode(key, options={"verify_signature": False})
     if not isinstance(decoded, dict):
-        log.warning(f"Unable to get token issuer. Could not decode token")
+        logger.warning("Unable to get token issuer. Could not decode token")
         return None
 
     issuer_host = urlparse(decoded.get('iss')).netloc

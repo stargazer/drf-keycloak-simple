@@ -2,16 +2,11 @@
 import logging
 import re
 from typing import Tuple, Dict, List
-
-from django.core.exceptions import ObjectDoesNotExist
-from django.contrib.auth.models import AnonymousUser, update_last_login, Group
 from django.contrib.auth import get_user_model
-from rest_framework import (
-    authentication,
-    exceptions,
-)
+from django.contrib.auth.models import AnonymousUser, update_last_login, Group
+from django.core.exceptions import ObjectDoesNotExist
+from rest_framework import authentication
 from rest_framework.exceptions import AuthenticationFailed
-from keycloak import KeycloakOpenID
 from .keycloak import (
     OIDCConfigException,
     get_keycloak_openid,
@@ -20,10 +15,8 @@ from .keycloak import (
 )
 from .settings import api_settings
 from .utils import get_token_issuer
-from . import __title__
 
-
-log = logging.getLogger(__title__)
+log = logging.getLogger(__name__)
 User = get_user_model()
 
 
@@ -120,12 +113,12 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
             return value
 
         if not self.keycloak_openid.realm_name:
-            log.warning(f"Cannot add realm prefix. Realm missing!")
+            log.warning("Cannot add realm prefix. Realm missing!")
             return value
 
         prefix = str(self.keycloak_openid.realm_name)+':'
         if re.search('^'+prefix, value):
-            log.debug(f"Value '{str(value)}' already has realm prefix")
+            log.debug("Value '{str(value)}' already has realm prefix")
             return value
 
         return prefix+str(value)
@@ -300,9 +293,9 @@ class KeycloakMultiAuthentication(KeycloakAuthentication):
         self,
         key: str
     ) -> Tuple[AnonymousUser, Dict]:
-        """ 
+        """
             Decode the unverified token to get the issuer and validate it against ALLOWED_HOSTS.
-            This determines the auth realm 
+            This determines the auth realm
         """
 
         if api_settings.KEYCLOAK_MULTI_OIDC_JSON is None:

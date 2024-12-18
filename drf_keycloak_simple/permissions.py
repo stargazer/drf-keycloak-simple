@@ -1,12 +1,9 @@
 import logging
 from typing import List
-
 from rest_framework import permissions
-
-from . import __title__
 from .keycloak import prefix_role
 
-log = logging.getLogger(__title__)
+logger = logging.getLogger(__name__)
 
 ROLE_GUEST = prefix_role('guest')
 ROLE_USER = prefix_role('user')
@@ -16,11 +13,11 @@ ROLE_ADMIN = prefix_role('admin')
 
 def _has_required_group(request, required_groups: List[str]) -> bool:
     user_groups = [x.name for x in request.user.groups.all()]
-    log.info(
+    logger.info(
         '_has_required_group | required_groups: '
         f'{required_groups}'
     )
-    log.info(
+    logger.info(
         '_has_required_group | user_groups: '
         f'{user_groups}'
     )
@@ -36,7 +33,7 @@ class BaseGroupBasedPermission(permissions.BasePermission):
     required_groups = []
 
     def has_permission(self, request, view):
-        log.info(
+        logger.info(
             'BaseGroupBasedPermission.has_permission: '
             f'{self.required_groups}'
         )
@@ -45,7 +42,7 @@ class BaseGroupBasedPermission(permissions.BasePermission):
         )
 
     def has_object_permission(self, request, view, obj):
-        log.info('BaseGroupBasedPermission.has_object_permission')
+        logger.info('BaseGroupBasedPermission.has_object_permission')
         return self.has_permission(request, view)
 
 
@@ -66,7 +63,7 @@ class HasOwnerGroup(permissions.BasePermission):
 
     def has_object_permission(self, request, view, obj):
         required_groups = [str(obj.owner.pk)]
-        log.info(
+        logger.info(
             'HasOwnerGroup.has_object_permission: '
             f'{required_groups}'
         )
@@ -76,12 +73,12 @@ class HasOwnerGroup(permissions.BasePermission):
 
 
 def _has_required_role(request, required_roles: List[str]) -> bool:
-    log.info(
+    logger.info(
         '_has_required_role | required_roles: '
         f'{required_roles}'
     )
     roles = getattr(request, 'roles', [])
-    log.info(
+    logger.info(
         '_has_required_role | request.roles: '
         f'{roles}'
     )
@@ -92,7 +89,7 @@ class BaseRoleBasedPermission(permissions.BasePermission):
     required_roles = []
 
     def has_permission(self, request, view):
-        log.info(
+        logger.info(
             'BaseRoleBasedPermission.has_permission: '
             f'{self.required_roles}'
         )
@@ -101,7 +98,7 @@ class BaseRoleBasedPermission(permissions.BasePermission):
         )
 
     def has_object_permission(self, request, view, obj):
-        log.info('BaseRoleBasedPermission.has_object_permission')
+        logger.info('BaseRoleBasedPermission.has_object_permission')
         return self.has_permission(request, view)
 
 
@@ -122,7 +119,7 @@ class HasOwnerRole(permissions.BasePermission):
 
     def has_object_permission(self, request, view, obj):
         required_roles = [str(obj.owner.pk)]
-        log.info(
+        logger.info(
             'HasOwnerRole.has_object_permission: '
             f'{required_roles}'
         )
