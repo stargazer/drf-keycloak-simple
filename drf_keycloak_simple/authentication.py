@@ -103,28 +103,6 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
                 'Invalid or expired token'
             )
 
-    def _add_realm_prefix(self, value: str) -> str:
-        """ Add 'REALM_NAME:' prefix to a string value.
-            This only works if using KEYCLOAK_MULTI_OIDC_JSON
-
-            Checks to ensure the prefix is not already added.
-            :param value: The string to prefix
-            :returns: Prefixed string
-        """
-        if not api_settings.KEYCLOAK_MULTI_OIDC_JSON:
-            return value
-
-        if not self.keycloak_openid.realm_name:
-            logger.warning("Cannot add realm prefix. Realm missing!")
-            return value
-
-        prefix = str(self.keycloak_openid.realm_name)+':'
-        if re.search('^'+prefix, value):
-            logger.debug("Value '{str(value)}' already has realm prefix")
-            return value
-
-        return prefix+str(value)
-
     def _map_keycloak_to_django_fields(self, decoded_token: dict) -> dict:
         """ Map Keycloak access_token fields to Django User attributes """
         django_fields = {}
@@ -136,8 +114,7 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
             and
             isinstance(kc_username_field, str)
         ):
-            django_fields['username'] = \
-                self._add_realm_prefix(decoded_token.get(kc_username_field, ''))
+            django_fields['username'] = decoded_token.get(kc_username_field, '')
 
         django_fields['email'] = decoded_token.get('email', '')
 
@@ -286,47 +263,3 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
                 'KeycloakAuthentication._user_toggle_is_staff | '
                 f'Exception: {e}'
             )
-
-
-class KeycloakMultiAuthentication(KeycloakAuthentication):
-    """ Keycloak authentication for multiple realms. Determined by KEYCLOAK_MULTI_OIDC_JSON"""
-
-    def authenticate_credentials(
-        self,
-        key: str
-    ) -> Tuple[AnonymousUser, Dict]:
-        """
-            Decode the unverified token to get the issuer and validate it against ALLOWED_HOSTS.
-            This determines the auth realm
-        """
-
-        if api_settings.KEYCLOAK_MULTI_OIDC_JSON is None:
-            logger.info(
-                'KeycloakMultiAuthentication.authenticate | '
-                'api_settings.KEYCLOAK_MULTI_OIDC_JSON is empty'
-            )
-
-        try:
-            self.keycloak_openid = get_keycloak_openid(host=get_token_issuer(key))
-            return super().authenticate_credentials(key)
-
-        except OIDCConfigException as e:
-            logger.warning(
-                'KeycloakMultiAuthentication.authenticate | '
-                f'OIDCConfigException: {e})'
-            )
-            raise AuthenticationFailed() from e
-
-        except AuthenticationFailed as e:
-            logger.info(
-                'KeycloakMultiAuthentication.authenticate | '
-                f'AuthenticationFailed: {e})'
-            )
-            raise e
-
-        except Exception as e:
-            logger.error(
-                'KeycloakMultiAuthentication.authenticate | '
-                f'Exception: {e})'
-            )
-            raise AuthenticationFailed() from e

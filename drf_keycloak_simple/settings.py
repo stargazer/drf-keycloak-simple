@@ -14,12 +14,6 @@ KEYCLOAK_ROLES_TO_DJANGO_IS_STAFF = \
 DEFAULTS = {
     'ALLOWED_HOSTS': os.getenv('DJANGO_ALLOWED_HOSTS', '').split(' '),
 
-    'KEYCLOAK_MULTI_OIDC_JSON': (
-        json.loads(os.getenv('KEYCLOAK_MULTI_OIDC_JSON'))
-        if os.getenv('KEYCLOAK_MULTI_OIDC_JSON')
-        else None
-    ),
-
     'KEYCLOAK_SERVER_URL': os.getenv('KEYCLOAK_SERVER_URL'),
 
     'KEYCLOAK_REALM': os.getenv('KEYCLOAK_REALM'),
