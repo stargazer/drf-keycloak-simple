@@ -1,7 +1,7 @@
 """ add a keycloak authentication class specific to Django Rest Framework """
-from typing import Tuple, Dict, List
 import logging
 import re
+from typing import Tuple, Dict, List
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.models import AnonymousUser, update_last_login, Group
@@ -143,9 +143,6 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
         ):
             django_fields['username'] = \
                 self._add_realm_prefix(decoded_token.get(kc_username_field, ''))
-
-        # ecocommons_user.CustomUser field
-        django_fields['realm'] = str(self.keycloak_openid.realm_name)
 
         django_fields['email'] = decoded_token.get('email', '')
 
