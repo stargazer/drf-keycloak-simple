@@ -1,7 +1,10 @@
 import logging
 from typing import List
+
 from rest_framework import permissions
+
 from .keycloak import prefix_role
+
 
 logger = logging.getLogger(__name__)
 

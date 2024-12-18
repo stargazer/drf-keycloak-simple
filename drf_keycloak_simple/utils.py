@@ -1,9 +1,12 @@
 import logging
 import jwt
 from urllib.parse import urlparse
+
 from django.http.request import validate_host
 from rest_framework.exceptions import AuthenticationFailed
+
 from .settings import api_settings
+
 
 logger = logging.getLogger(__name__)
 

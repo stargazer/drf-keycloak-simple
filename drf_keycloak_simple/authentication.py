@@ -1,12 +1,13 @@
-""" add a keycloak authentication class specific to Django Rest Framework """
 import logging
 import re
 from typing import Tuple, Dict, List
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser, update_last_login, Group
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import authentication
 from rest_framework.exceptions import AuthenticationFailed
+
 from .keycloak import (
     OIDCConfigException,
     get_keycloak_openid,
@@ -16,7 +17,8 @@ from .keycloak import (
 from .settings import api_settings
 from .utils import get_token_issuer
 
-log = logging.getLogger(__name__)
+
+logger = logging.getlogger(__name__)
 User = get_user_model()
 
 
@@ -56,7 +58,7 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
         key: str
     ) -> Tuple[AnonymousUser, Dict]:
         """ Attempt to verify JWT from Authorization header with Keycloak """
-        log.debug('KeycloakAuthentication.authenticate_credentials')
+        logger.debug('KeycloakAuthentication.authenticate_credentials')
         try:
             # Create a default KeycloakOpenID configuration if not already available
             if self.keycloak_openid is None:
@@ -67,7 +69,7 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
             decoded_token = self._get_decoded_token(key)
             self._verify_token_active(decoded_token)
             if api_settings.KEYCLOAK_MANAGE_LOCAL_USER is not True:
-                log.debug(
+                logger.debug(
                     'KeycloakAuthentication.authenticate_credentials: '
                     f'{decoded_token}'
                 )
@@ -75,7 +77,7 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
             else:
                 user = self._handle_local_user(decoded_token)
 
-            log.debug(
+            logger.debug(
                 'KeycloakAuthentication.authenticate_credentials:\n'
                 '################# decoded_token ###############\n'
                 f'{user} | {decoded_token}\n'
@@ -84,7 +86,7 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
 
             return (user, decoded_token)
         except Exception as e:
-            log.error(
+            logger.error(
                 'KeycloakAuthentication.authenticate_credentials | '
                 f'Exception: {e}'
             )
@@ -113,12 +115,12 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
             return value
 
         if not self.keycloak_openid.realm_name:
-            log.warning("Cannot add realm prefix. Realm missing!")
+            logger.warning("Cannot add realm prefix. Realm missing!")
             return value
 
         prefix = str(self.keycloak_openid.realm_name)+':'
         if re.search('^'+prefix, value):
-            log.debug("Value '{str(value)}' already has realm prefix")
+            logger.debug("Value '{str(value)}' already has realm prefix")
             return value
 
         return prefix+str(value)
@@ -158,7 +160,7 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
                     setattr(user, key, value)
                     save_model = True
             except Exception:
-                log.warning(
+                logger.warning(
                     'KeycloakAuthentication.'
                     '_update_user | '
                     f'setattr: {key} field does not exist'
@@ -181,7 +183,7 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
             user = self._update_user(user, django_fields)
 
         except ObjectDoesNotExist:
-            log.warning(
+            logger.warning(
                 'KeycloakAuthentication._handle_local_user | '
                 f'ObjectDoesNotExist: {sub} does not exist - creating'
             )
@@ -208,12 +210,12 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
             )
             roles.append(str(user.pk))
         except Exception as e:
-            log.warning(
+            logger.warning(
                 'KeycloakAuthentication._get_roles | '
                 f'Exception: {e}'
             )
 
-        log.debug(f'KeycloakAuthentication._get_roles: {roles}')
+        logger.debug(f'KeycloakAuthentication._get_roles: {roles}')
         return roles
 
     def _get_or_create_groups(self, roles: List[str]) -> List[Group]:
@@ -221,12 +223,12 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
         for role in roles:
             group, created = Group.objects.get_or_create(name=role)
             if created:
-                log.debug(
+                logger.debug(
                     'KeycloakAuthentication._get_or_create_groups | created: '
                     f'{group.name}'
                 )
             else:
-                log.debug(
+                logger.debug(
                     'KeycloakAuthentication._get_or_create_groups | exists: '
                     f'{group.name}'
                 )
@@ -245,7 +247,7 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
                 and hasattr(user, 'is_staff')
                 and getattr(user, 'is_superuser', False) is False
             )
-            log.debug(
+            logger.debug(
                 f'KeycloakAuthentication._user_toggle_is_staff | {user} | '
                 f'valid_user: {valid_user}'
             )
@@ -260,17 +262,17 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
                         api_settings.KEYCLOAK_ROLES_TO_DJANGO_IS_STAFF
                     )
                 )
-                log.debug(
+                logger.debug(
                     f'KeycloakAuthentication._user_toggle_is_staff | {user} | '
                     f'is_staff_roles: {is_staff_roles}'
                 )
                 user_roles = set(request.roles)
-                log.debug(
+                logger.debug(
                     f'KeycloakAuthentication._user_toggle_is_staff | {user} | '
                     f'user_roles: {user_roles}'
                 )
                 is_staff = bool(is_staff_roles.intersection(user_roles))
-                log.debug(
+                logger.debug(
                     f'KeycloakAuthentication._user_toggle_is_staff | {user} | '
                     f'is_staff: {is_staff}'
                 )
@@ -280,7 +282,7 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
                     user.save()
 
         except Exception as e:
-            log.warning(
+            logger.warning(
                 'KeycloakAuthentication._user_toggle_is_staff | '
                 f'Exception: {e}'
             )
@@ -299,7 +301,7 @@ class KeycloakMultiAuthentication(KeycloakAuthentication):
         """
 
         if api_settings.KEYCLOAK_MULTI_OIDC_JSON is None:
-            log.info(
+            logger.info(
                 'KeycloakMultiAuthentication.authenticate | '
                 'api_settings.KEYCLOAK_MULTI_OIDC_JSON is empty'
             )
@@ -309,21 +311,21 @@ class KeycloakMultiAuthentication(KeycloakAuthentication):
             return super().authenticate_credentials(key)
 
         except OIDCConfigException as e:
-            log.warning(
+            logger.warning(
                 'KeycloakMultiAuthentication.authenticate | '
                 f'OIDCConfigException: {e})'
             )
             raise AuthenticationFailed() from e
 
         except AuthenticationFailed as e:
-            log.info(
+            logger.info(
                 'KeycloakMultiAuthentication.authenticate | '
                 f'AuthenticationFailed: {e})'
             )
             raise e
 
         except Exception as e:
-            log.error(
+            logger.error(
                 'KeycloakMultiAuthentication.authenticate | '
                 f'Exception: {e})'
             )

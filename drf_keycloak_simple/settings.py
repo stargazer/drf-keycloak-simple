@@ -1,5 +1,3 @@
-""" Settings config for the drf_keycloak_auth application """
-import datetime
 import os
 
 from django.conf import settings
@@ -21,7 +19,7 @@ DEFAULTS = {
         if os.getenv('KEYCLOAK_MULTI_OIDC_JSON')
         else None
     ),
-    
+
     'KEYCLOAK_SERVER_URL': os.getenv('KEYCLOAK_SERVER_URL'),
 
     'KEYCLOAK_REALM': os.getenv('KEYCLOAK_REALM'),
