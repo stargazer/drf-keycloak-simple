@@ -18,7 +18,7 @@ from .settings import api_settings
 from .utils import get_token_issuer
 
 
-logger = logging.getlogger(__name__)
+logger = logging.getLogger(__name__)
 User = get_user_model()
 
 
